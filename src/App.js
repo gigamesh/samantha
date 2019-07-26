@@ -1,4 +1,5 @@
-import React from "react";
+import { useState, useEffect } from "react";
+import { useTimeout, useInterval } from "./hooks";
 
 // this comment tells babel to convert jsx to calls to a function called jsx instead of React.createElement
 /** @jsx jsx */
@@ -16,177 +17,162 @@ import "./App.scss";
 import styles from "./styles";
 
 const beepSound = new Audio(beep);
-const initState = {
-  timeouts: [],
-  intervals: [],
-  gameOn: false,
-  started: false,
-  playersTurn: false,
-  strictMode: false,
-  count: 0,
-  sequence: [],
-  playerSequence: [],
-  countText: "--",
-  interval: 800,
-  welcomeScreen: true,
-  activePad: null
-};
 
-class App extends React.Component {
-  state = { ...initState };
+function App() {
+  const [timeouts, setTimeouts] = useState([]);
+  const [intervals, setIntervals] = useState([]);
+  const [gameOn, setGameOn] = useState(false);
+  const [started, setStarted] = useState(false);
+  const [playersTurn, setPlayersTurn] = useState(false);
+  const [strictMode, setStrictMode] = useState(false);
+  const [count, setCount] = useState(0);
+  const [sequence, setSequence] = useState([]);
+  const [playerSequence, setPlayerSequence] = useState([]);
+  const [countText, setCountText] = useState("--");
+  const [seqInterval, setSeqInterval] = useState(800);
+  const [welcomeScreen, setWelcomeScreen] = useState(true);
+  const [activePad, setActivePad] = useState(null);
 
-  onHandler = () => {
-    const { gameOn } = this.state;
+  useEffect(() => {
+    if (!playersTurn && gameOn) {
+      let i = 0;
+      let padTrigger = setInterval(() => {
+        let activePad = sequence[i];
+
+        activatePad(activePad);
+
+        setTimeout(() => {
+          setActivePad(null);
+        }, seqInterval - 200);
+
+        if (i === sequence.length - 1) {
+          clearInterval(padTrigger);
+          setPlayersTurn(true);
+        }
+        i++;
+      }, seqInterval);
+
+      intervals.push(padTrigger);
+      setIntervals(intervals);
+      setPlayerSequence([]);
+    }
+  }, [playersTurn, gameOn, sequence, seqInterval, intervals]);
+
+  const onHandler = () => {
     if (gameOn) {
-      this.turnOff();
+      turnOff();
     } else {
-      this.setState({ gameOn: true, countText: "--" });
-      this.startHandler();
+      setGameOn(true);
+      setCountText("--");
+      startHandler();
     }
     let switchAudio = new Audio(onSwitch);
     switchAudio.play();
   };
 
-  turnOff = () => {
-    const { timeouts, intervals } = this.state;
-
+  const turnOff = () => {
     timeouts.forEach(clearTimeout);
     intervals.forEach(clearInterval);
 
-    this.setState({ ...initState, welcomeScreen: false });
+    setWelcomeScreen(false);
+    setTimeouts([]);
+    setIntervals([]);
+    setGameOn(false);
+    setStarted(false);
+    setPlayersTurn(false);
+    setStrictMode(false);
+    setCount(0);
+    setSequence([]);
+    setPlayerSequence([]);
+    setCountText("--");
+    setSeqInterval(800);
+    setActivePad(null);
   };
 
-  startHandler = () => {
-    const { gameOn, timeouts } = this.state;
+  const startHandler = () => {
     if (gameOn) {
       beepSound.play();
 
-      let start = setTimeout(this.newSequence, 1000);
+      let start = setTimeout(newSequence, 1000);
       timeouts.push(start);
-      this.setState({ started: true, timeouts, sequence: [] });
+      setStarted(true);
+      setTimeouts(timeouts);
+      setSequence([]);
     }
   };
 
-  resetSequence = () => {
-    const { timeouts, intervals } = this.state;
-
+  const resetSequence = () => {
     timeouts.forEach(clearTimeout);
     intervals.forEach(clearInterval);
 
-    this.setState({
-      sequence: [],
-      count: 0,
-      started: false,
-      timeouts: [],
-      intervals: []
-    });
+    setSequence([]);
+    setCount(0);
+    setStarted(false);
+    setTimeouts([]);
+    setSequence([]);
 
     setTimeout(() => {
-      this.setState({ countBox: "--" });
+      setCountText("--");
     }, 100);
   };
 
-  newSequence = () => {
-    const { count, sequence, interval } = this.state;
+  const newSequence = () => {
     const newCount = count + 1;
     let randomNum = Math.floor(Math.random() * 4);
-    sequence.push(randomNum);
+    const newSequence = [...sequence, randomNum];
 
-    this.setState(
-      {
-        count: count + 1,
-        interval: interval * 0.95,
-        started: true,
-        countText: newCount.toString().padStart(2, "0"),
-        playersTurn: false,
-        sequence
-      },
-      () => this.playSequence()
-    );
+    setCount(newCount);
+    setSeqInterval(seqInterval * 0.95);
+    setStarted(true);
+    setCountText(newCount.toString().padStart(2, "0"));
+    setPlayersTurn(false);
+    setSequence(newSequence);
   };
 
-  playSequence = () => {
-    const { sequence, intervals, interval } = this.state;
-
-    let i = 0;
-
-    let padTrigger = setInterval(() => {
-      let activePad = sequence[i];
-
-      this.activatePad(activePad);
-
-      setTimeout(() => {
-        this.setState({ activePad: null });
-      }, interval - 200);
-
-      if (i === sequence.length - 1) {
-        clearInterval(padTrigger);
-        this.setState({ playersTurn: true });
-      }
-      i++;
-    }, interval);
-
-    intervals.push(padTrigger);
-    this.setState({ intervals, playerSequence: [] });
+  const activatePad = (activePad, isMuted) => {
+    setActivePad(activePad);
+    if (isMuted) return;
+    let note = new Audio(lightPads[activePad].noteURL);
+    note.play();
   };
 
-  activatePad = (activePad, isMuted) => {
-    this.setState({ activePad }, () => {
-      if (isMuted) return;
-      let note = new Audio(lightPads[activePad].noteURL);
-      note.play();
-    });
-  };
-
-  pieMouseUpHandler = () => {
-    const {
-      started,
-      playersTurn,
-      playerSequence,
-      sequence,
-      count
-    } = this.state;
-
+  const pieMouseUpHandler = () => {
     if (started && playersTurn) {
-      this.setState({ activePad: null }, () => {
-        if (playerSequence.length === sequence.length) {
-          this.setState({
-            playersTurn: false
-          });
+      setActivePad(null);
+      if (playerSequence.length === sequence.length) {
+        setPlayersTurn(false);
+      }
 
-          if (count === winLength) {
-            setTimeout(this.forTheWin, 1000);
-            return;
-          }
-          setTimeout(this.newSequence, 1200);
-        }
-      });
+      if (count === winLength) {
+        setTimeout(forTheWin, 1000);
+        return;
+      }
+      setTimeout(newSequence, 1200);
     }
   };
 
-  pieMouseDownHandler = e => {
-    const { playerSequence: tempSequence, playersTurn } = this.state;
+  const pieMouseDownHandler = e => {
     if (!playersTurn) return;
+    const currentPad = Number(e.target.id);
+    setActivePad(currentPad);
 
-    const activePad = Number(e.target.id);
-    this.setState({ activePad });
+    const tempSequence = [...playerSequence, currentPad];
+
     let newNote;
-    let noteURL = lightPads[activePad].noteURL;
+    let noteURL = lightPads[currentPad].noteURL;
 
-    tempSequence.push(activePad);
-
-    if (this.checkIfCorrect(tempSequence)) {
+    if (checkIfCorrect(tempSequence)) {
       newNote = new Audio(noteURL);
       newNote.play();
-      this.setState({ playerSequence: tempSequence, activePad });
+      setPlayerSequence(tempSequence);
     } else {
-      this.setState({ playersTurn: false }, this.error);
+      setPlayersTurn(false);
+      error();
     }
   };
 
-  checkIfCorrect = tempSequence => {
-    const { sequence } = this.state;
-    this.setState({ playersTurn: false });
+  const checkIfCorrect = tempSequence => {
+    setPlayersTurn(false);
     let isCorrect = true;
 
     tempSequence.forEach((item, i) => {
@@ -195,55 +181,49 @@ class App extends React.Component {
       }
     });
 
-    this.setState({ playersTurn: true });
+    setPlayersTurn(true);
     return isCorrect;
   };
 
-  error = () => {
-    const { strictMode } = this.state;
+  const error = () => {
     errorBeep.play();
-    this.blinky();
+    blinky();
 
     if (strictMode) {
       setTimeout(() => {
-        this.resetSequence();
+        resetSequence();
         setTimeout(() => {
-          this.startHandler();
+          startHandler();
         }, 1250);
       }, 1250);
 
-      this.setState({ sequence: [], count: 0 });
+      setCount(0);
+      setSequence([]);
     }
   };
 
-  blinky = () => {
-    const { count } = this.state;
+  const blinky = () => {
     const repeats = 8;
     let current = 0;
 
     let blink = setInterval(() => {
-      this.setState({ countText: "XX" }, () => {
+      setCountText("XX");
+      setTimeout(() => {
+        setCountText("");
+      }, 100);
+      current++;
+      if (current === repeats) {
+        clearInterval(blink);
         setTimeout(() => {
-          this.setState({ countText: "" });
-        }, 100);
-        current++;
-        if (current === repeats) {
-          clearInterval(blink);
-          setTimeout(() => {
-            console.log("about to play sequence....");
-            this.setState({
-              countText: count.toString().padStart(2, "0"),
-              playersTurn: true
-            });
-            this.playSequence();
-          }, 600);
-        }
-      });
+          setCount(count.toString().padStart(2, "0"));
+          setPlayersTurn(true);
+        }, 600);
+      }
     }, 200);
   };
 
-  forTheWin = () => {
-    const { intervals, timeouts } = this.state;
+  const forTheWin = () => {
+    setPlayersTurn(false);
 
     let i = 0;
     const winMsgInterval = setInterval(() => {
@@ -254,11 +234,11 @@ class App extends React.Component {
       let current = [message[i], message[i + 1]];
       current = current.join("");
 
-      this.setState({ countText: current });
+      setCountText(current);
 
       const countTextTimeout = setTimeout(() => {
         timeouts.push(countTextTimeout);
-        this.setState({ countText: "" });
+        setCountText("");
       }, 200);
       i++;
     }, 220);
@@ -267,10 +247,8 @@ class App extends React.Component {
     let timer = 250;
     let isMuted = false;
     const lightShow = () => {
-      const { gameOn } = this.state;
-
       if (!gameOn) return;
-      this.activatePad(j % 4, isMuted);
+      activatePad(j % 4, isMuted);
       setTimeout(() => {
         if (timer > 40) {
           timer *= (1 - 0.003) ** j;
@@ -284,15 +262,13 @@ class App extends React.Component {
     };
 
     lightShow();
-
-    this.setState({ playersTurn: false, timeouts, intervals });
+    setTimeouts(timeouts);
+    setIntervals(intervals);
   };
 
-  strictHandler = () => {
-    const { strictMode, gameOn } = this.state;
-
+  const strictHandler = () => {
     if (gameOn) {
-      this.setState({ strictMode: !strictMode });
+      setStrictMode(!strictMode);
 
       if (!strictMode) {
         beepSound.play();
@@ -300,94 +276,83 @@ class App extends React.Component {
     }
   };
 
-  closeWelcome = () => {
-    this.setState({ welcomeScreen: false });
+  const closeWelcome = () => {
+    setWelcomeScreen(false);
   };
 
-  render() {
-    const {
-      gameOn,
-      countText,
-      started,
-      activePad,
-      strictMode,
-      welcomeScreen
-    } = this.state;
-
-    return welcomeScreen ? (
-      <WelcomeScreen closeWelcome={this.closeWelcome} />
-    ) : (
-      <div className="App">
-        <div className="circle-outer">
-          <div className="row-wrap">
-            <div
-              id="3"
-              className={`pie upper-left ${activePad === 3 ? "active" : ""}`}
-              onMouseDown={this.pieMouseDownHandler}
-              onMouseUp={this.pieMouseUpHandler}
-            />
-            <div
-              id="2"
-              className={`pie upper-right ${activePad === 2 ? "active" : ""}`}
-              onMouseDown={this.pieMouseDownHandler}
-              onMouseUp={this.pieMouseUpHandler}
-            />
-          </div>
-          <div className="row-wrap">
-            <div
-              id="0"
-              className={`pie bottom-left ${activePad === 0 ? "active" : ""}`}
-              onMouseDown={this.pieMouseDownHandler}
-              onMouseUp={this.pieMouseUpHandler}
-            />
-            <div
-              id="1"
-              className={`pie bottom-right ${activePad === 1 ? "active" : ""}`}
-              onMouseDown={this.pieMouseDownHandler}
-              onMouseUp={this.pieMouseUpHandler}
-            />
-          </div>
-          <div className="center-circle">
-            <h1 className="header">samantha</h1>
-            <div className="center-middle-wrap">
-              <div className="control-wrap">
-                <div
-                  className="light start"
-                  onClick={this.startHandler}
-                  css={styles.startLight(started)}
-                />
-                <p>START</p>
-              </div>
-              <div className="control-wrap">
-                <div className="count-box" css={styles.countBox(gameOn)}>
-                  <p>{countText}</p>
-                </div>
-                <p>COUNT</p>
-              </div>
-              <div className="control-wrap">
-                <div
-                  className="light strict"
-                  css={styles.strictLight(strictMode)}
-                  onClick={this.strictHandler}
-                />
-                <p>STRICT</p>
-              </div>
-            </div>
-            <div className="on-wrap">
+  return welcomeScreen ? (
+    <WelcomeScreen closeWelcome={closeWelcome} />
+  ) : (
+    <div className="App">
+      <div className="circle-outer">
+        <div className="row-wrap">
+          <div
+            id="3"
+            className={`pie upper-left ${activePad === 3 ? "active" : ""}`}
+            onMouseDown={pieMouseDownHandler}
+            onMouseUp={pieMouseUpHandler}
+          />
+          <div
+            id="2"
+            className={`pie upper-right ${activePad === 2 ? "active" : ""}`}
+            onMouseDown={pieMouseDownHandler}
+            onMouseUp={pieMouseUpHandler}
+          />
+        </div>
+        <div className="row-wrap">
+          <div
+            id="0"
+            className={`pie bottom-left ${activePad === 0 ? "active" : ""}`}
+            onMouseDown={pieMouseDownHandler}
+            onMouseUp={pieMouseUpHandler}
+          />
+          <div
+            id="1"
+            className={`pie bottom-right ${activePad === 1 ? "active" : ""}`}
+            onMouseDown={pieMouseDownHandler}
+            onMouseUp={pieMouseUpHandler}
+          />
+        </div>
+        <div className="center-circle">
+          <h1 className="header">samantha</h1>
+          <div className="center-middle-wrap">
+            <div className="control-wrap">
               <div
-                className="on-toggle-outer"
-                css={styles.onButton(gameOn)}
-                onClick={this.onHandler}
-              >
-                <div className="on-toggle-inner" />
-              </div>
-              <p>ON</p>
+                className="light start"
+                onClick={startHandler}
+                css={styles.startLight(started)}
+              />
+              <p>START</p>
             </div>
+            <div className="control-wrap">
+              <div className="count-box" css={styles.countBox(gameOn)}>
+                <p>{countText}</p>
+              </div>
+              <p>COUNT</p>
+            </div>
+            <div className="control-wrap">
+              <div
+                className="light strict"
+                css={styles.strictLight(strictMode)}
+                onClick={strictHandler}
+              />
+              <p>STRICT</p>
+            </div>
+          </div>
+          <div className="on-wrap">
+            <div
+              className="on-toggle-outer"
+              css={styles.onButton(gameOn)}
+              onClick={onHandler}
+            >
+              <div className="on-toggle-inner" />
+            </div>
+            <p>ON</p>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default App;
