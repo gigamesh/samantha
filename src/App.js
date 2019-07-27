@@ -1,11 +1,10 @@
-import { useReducer, useEffect } from "react";
-// import { useTimeout, useInterval } from "./hooks";
-import reducer, { initState } from "./reducer";
+import { useReducer, useEffect, useRef } from 'react';
+import reducer, { initState } from './reducer';
 
 // this comment tells babel to convert jsx to calls to a function called jsx instead of React.createElement
 /** @jsx jsx */
-import { jsx } from "@emotion/core";
-import WelcomeScreen from "./WelcomeScreen";
+import { jsx } from '@emotion/core';
+import WelcomeScreen from './WelcomeScreen';
 import {
   actions as act,
   message,
@@ -14,19 +13,17 @@ import {
   errorBeep,
   lightPads,
   winLength,
-  gState
-} from "./constants";
-import "./App.scss";
-import styles from "./styles";
+  gameState as gState,
+} from './constants';
+import './App.scss';
+import styles from './styles';
 
 const beepSound = new Audio(beep);
-const delay = time => new Promise(res => setTimeout(() => res(), time));
 
 function App() {
   const [
     {
       gameState,
-      timers,
       gameOn,
       started,
       strictMode,
@@ -36,13 +33,15 @@ function App() {
       countText,
       seqInterval,
       welcomeScreen,
-      activePad
+      activePad,
     },
-    dispatch
+    dispatch,
   ] = useReducer(reducer, initState);
 
+  const timers = useRef([]);
+
   const onHandler = () => {
-    dispatch({ type: act.ON_SWITCH });
+    dispatch({ type: act.TURN_ON });
     let switchAudio = new Audio(onSwitch);
     switchAudio.play();
   };
@@ -55,6 +54,12 @@ function App() {
         dispatch({ type: act.START });
         beepSound.play();
       }, 500);
+    } else {
+      dispatch({ type: act.TURN_OFF });
+      timers.current.forEach(timer => {
+        clearTimeout(timer);
+        clearInterval(timer);
+      });
     }
   }, [gameState]);
 
@@ -62,9 +67,10 @@ function App() {
 
   useEffect(() => {
     if (gameState === gState.STARTED) {
-      setTimeout(() => {
+      const started = setTimeout(() => {
         dispatch({ type: act.INCREMENT_SEQUENCE });
       }, 500);
+      timers.current.push(started);
     }
   }, [gameState]);
 
@@ -75,25 +81,29 @@ function App() {
       (() => {
         let i = 0;
         const padTrigger = setInterval(async () => {
+          timers.current.push(padTrigger);
           // TODO: save padTrigger to ref
 
           activatePad(sequence[i]);
-          await delay(seqInterval - 200);
-          dispatch({
-            type: act.SET_ACTIVE_PAD,
-            payload: { activePad: null }
-          });
+          const turnOffPad = setTimeout(() => {
+            timers.current.push(turnOffPad);
 
-          // Sequence done, let the player go
-          if (i === sequence.length - 1) {
-            clearInterval(padTrigger);
-            dispatch({ type: act.SET_PLAYERS_TURN });
-          }
-          i++;
+            dispatch({
+              type: act.SET_ACTIVE_PAD,
+              payload: { activePad: null },
+            });
+
+            // Sequence done, let the player go
+            if (i === sequence.length - 1) {
+              clearInterval(padTrigger);
+              dispatch({ type: act.SET_PLAYERS_TURN });
+            }
+            i++;
+          }, seqInterval - 200);
         }, seqInterval);
       })();
     }
-  }, [gameState, sequence, seqInterval, timers, count]);
+  }, [gameState, sequence, seqInterval, count]);
 
   // const resetSequence = () => {
   //   timers.forEach(timer => {
@@ -126,79 +136,72 @@ function App() {
   // };
 
   const activatePad = (activePad, isMuted) => {
-    dispatch({ type: act.SET_ACTIVE_PAD, payload: { activePad, isMuted } });
+    dispatch({ type: act.SET_ACTIVE_PAD, payload: { activePad } });
     if (isMuted) return;
     let note = new Audio(lightPads[activePad].noteURL);
     note.play();
   };
 
-  // const pieMouseUpHandler = () => {
-  //   if (started && playersTurn) {
-  //     setActivePad(null);
-  //     if (playerSequence.length === sequence.length) {
-  //       setPlayersTurn(false);
-  //     }
+  const pieMouseUpHandler = async () => {
+    if (gameState !== gState.PLAYERS_TURN) return;
 
-  //     if (count === winLength) {
-  //       setTimeout(forTheWin, 1000);
-  //       return;
-  //     }
-  //     setTimeout(newSequence, 1200);
-  //   }
-  // };
+    if (count === winLength) {
+      const pause = setTimeout(() => {
+        timers.current.push(pause);
+        console.log('forTheWin TODO');
+        // forTheWin()
+      }, 1000);
+      return;
+    }
 
-  // const pieMouseDownHandler = e => {
-  //   if (!playersTurn) return;
-  //   const currentPad = Number(e.target.id);
-  //   setActivePad(currentPad);
+    dispatch({ type: act.SET_ACTIVE_PAD, payload: { activePad: null } });
+    if (playerSequence.length === sequence.length) {
+      const pause = setTimeout(() => {
+        timers.current.push(pause);
+        dispatch({ type: act.INCREMENT_SEQUENCE });
+      }, 1200);
+    }
+  };
 
-  //   const tempSequence = [...playerSequence, currentPad];
+  const pieMouseDownHandler = e => {
+    if (gameState !== gState.PLAYERS_TURN) return;
 
-  //   let newNote;
-  //   let noteURL = lightPads[currentPad].noteURL;
+    const currentPad = Number(e.target.id);
+    dispatch({ type: act.SET_ACTIVE_PAD, payload: { activePad: currentPad } });
 
-  //   if (checkIfCorrect(tempSequence)) {
-  //     newNote = new Audio(noteURL);
-  //     newNote.play();
-  //     setPlayerSequence(tempSequence);
-  //   } else {
-  //     setPlayersTurn(false);
-  //     error();
-  //   }
-  // };
+    const tempSequence = [...playerSequence, currentPad];
 
-  // const checkIfCorrect = tempSequence => {
-  //   setPlayersTurn(false);
-  //   let isCorrect = true;
+    let newNote;
+    let noteURL = lightPads[currentPad].noteURL;
 
-  //   tempSequence.forEach((item, i) => {
-  //     if (tempSequence[i] !== sequence[i]) {
-  //       isCorrect = false;
-  //     }
-  //   });
+    if (checkIfCorrect(tempSequence)) {
+      newNote = new Audio(noteURL);
+      newNote.play();
+      dispatch({
+        type: act.STORE_PLAYER_SEQUENCE,
+        payload: { playerSequence: tempSequence },
+      });
+    } else {
+      console.log('error! (TO DO)');
+      // error();
+    }
+  };
 
-  //   setPlayersTurn(true);
-  //   return isCorrect;
-  // };
+  const checkIfCorrect = tempSequence => {
+    let isCorrect = true;
+
+    tempSequence.forEach((item, i) => {
+      if (tempSequence[i] !== sequence[i]) {
+        isCorrect = false;
+      }
+    });
+    return isCorrect;
+  };
 
   // const error = () => {
+  //   dispatch({type: act.SET_ERROR});
   //   errorBeep.play();
-  //   blinky();
 
-  //   if (strictMode) {
-  //     setTimeout(() => {
-  //       resetSequence();
-  //       setTimeout(() => {
-  //         startHandler();
-  //       }, 1250);
-  //     }, 1250);
-
-  //     setCount(0);
-  //     setSequence([]);
-  //   }
-  // };
-
-  // const blinky = () => {
   //   const repeats = 8;
   //   let current = 0;
 
@@ -216,6 +219,18 @@ function App() {
   //       }, 600);
   //     }
   //   }, 200);
+
+  //   if (strictMode) {
+  //     setTimeout(() => {
+  //       resetSequence();
+  //       setTimeout(() => {
+  //         startHandler();
+  //       }, 1250);
+  //     }, 1250);
+
+  //     setCount(0);
+  //     setSequence([]);
+  //   }
   // };
 
   // const forTheWin = () => {
@@ -284,29 +299,29 @@ function App() {
         <div className="row-wrap">
           <div
             id="3"
-            className={`pie upper-left ${activePad === 3 ? "active" : ""}`}
-            // onMouseDown={pieMouseDownHandler}
-            // onMouseUp={pieMouseUpHandler}
+            className={`pie upper-left ${activePad === 3 ? 'active' : ''}`}
+            onMouseDown={pieMouseDownHandler}
+            onMouseUp={pieMouseUpHandler}
           />
           <div
             id="2"
-            className={`pie upper-right ${activePad === 2 ? "active" : ""}`}
-            // onMouseDown={pieMouseDownHandler}
-            // onMouseUp={pieMouseUpHandler}
+            className={`pie upper-right ${activePad === 2 ? 'active' : ''}`}
+            onMouseDown={pieMouseDownHandler}
+            onMouseUp={pieMouseUpHandler}
           />
         </div>
         <div className="row-wrap">
           <div
             id="0"
-            className={`pie bottom-left ${activePad === 0 ? "active" : ""}`}
-            // onMouseDown={pieMouseDownHandler}
-            // onMouseUp={pieMouseUpHandler}
+            className={`pie bottom-left ${activePad === 0 ? 'active' : ''}`}
+            onMouseDown={pieMouseDownHandler}
+            onMouseUp={pieMouseUpHandler}
           />
           <div
             id="1"
-            className={`pie bottom-right ${activePad === 1 ? "active" : ""}`}
-            // onMouseDown={pieMouseDownHandler}
-            // onMouseUp={pieMouseUpHandler}
+            className={`pie bottom-right ${activePad === 1 ? 'active' : ''}`}
+            onMouseDown={pieMouseDownHandler}
+            onMouseUp={pieMouseUpHandler}
           />
         </div>
         <div className="center-circle">
