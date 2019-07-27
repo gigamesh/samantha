@@ -25,7 +25,7 @@ export const gameState = {
 };
 
 export const message = 'YOU WIN!!   '.split('');
-export const winLength = 4;
+export const winLength = 20;
 export const onSwitch =
   'https://s3-us-west-1.amazonaws.com/mattmasurka/random/fCC+samantha/offswitch.mp3';
 export const beep =
