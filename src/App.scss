@@ -1,6 +1,6 @@
-@import url("https://fonts.googleapis.com/css?family=Wire+One|Abel|VT323");
+@import url('https://fonts.googleapis.com/css?family=Wire+One|Abel|VT323');
 body {
-  font-family: "Abel", sans-serif;
+  font-family: 'Abel', sans-serif;
   font-size: 18px;
   color: #222;
   height: 100vh;
@@ -65,9 +65,8 @@ p {
 }
 
 .row-wrap {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
 }
 
@@ -102,10 +101,8 @@ p {
 
 .pie.upper-left {
   margin-right: 8px;
-  border-left: 5px solid #222;
-  border-right: 5px solid #222;
-  border-bottom: 5px solid #222;
-  border-top: 5px solid #222;
+  margin-bottom: 16px;
+  border: 5px solid #222;
   border-top-left-radius: 100%;
   background: #d0c435;
 }
@@ -121,11 +118,9 @@ p {
 }
 
 .pie.upper-right {
+  margin-bottom: 16px;
   margin-left: 8px;
-  border-left: 5px solid #222;
-  border-right: 5px solid #222;
-  border-bottom: 5px solid #222;
-  border-top: 5px solid #222;
+  border: 5px solid #222;
   border-top-right-radius: 100%;
   background: #63b563;
 }
@@ -142,10 +137,7 @@ p {
 
 .pie.bottom-left {
   margin-right: 8px;
-  border-left: 5px solid #222;
-  border-right: 5px solid #222;
-  border-bottom: 5px solid #222;
-  border-top: 5px solid #222;
+  border: 5px solid #222;
   border-bottom-left-radius: 100%;
   background: #3379a1;
 }
@@ -162,10 +154,7 @@ p {
 
 .pie.bottom-right {
   margin-left: 8px;
-  border-right: 5px solid #222;
-  border-bottom: 5px solid #222;
-  border-top: 5px solid #222;
-  border-left: 5px solid #222;
+  border: 5px solid #222;
   border-bottom-right-radius: 100%;
   background: #b54444;
 }
@@ -205,7 +194,7 @@ p {
 }
 
 .header {
-  font-family: "Wire One", sans-serif;
+  font-family: 'Wire One', sans-serif;
   font-size: 3em;
   margin: 20px 0 5px 0;
   letter-spacing: 3px;
@@ -252,7 +241,7 @@ p {
 }
 
 .count-box {
-  font-family: "VT323", monospace;
+  font-family: 'VT323', monospace;
   height: 50px;
   width: 100%;
   border: 3px solid #222;
@@ -329,7 +318,7 @@ p {
 }
 
 .new-game-btn {
-  font-family: "Wire One", sans-serif;
+  font-family: 'Wire One', sans-serif;
   font-size: 2em;
   font-weight: bold;
   letter-spacing: 3px;

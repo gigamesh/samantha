@@ -30,7 +30,7 @@ function App() {
       count,
       sequence,
       playerSequence,
-      countText,
+      ledDisplay,
       seqInterval,
       welcomeScreen,
       activePad,
@@ -41,53 +41,53 @@ function App() {
   const timers = useRef([]);
 
   const onHandler = () => {
-    dispatch({ type: act.TURN_ON });
     let switchAudio = new Audio(onSwitch);
     switchAudio.play();
-  };
 
-  ///////// START GAME
-
-  useEffect(() => {
-    if (gameState === gState.ON) {
-      setTimeout(() => {
-        dispatch({ type: act.START });
-        beepSound.play();
-      }, 500);
-    } else {
-      dispatch({ type: act.TURN_OFF });
+    if (gameState) {
       timers.current.forEach(timer => {
         clearTimeout(timer);
         clearInterval(timer);
       });
+      dispatch({ type: act.TURN_OFF });
+    } else {
+      dispatch({ type: act.TURN_ON });
+    }
+  };
+
+  /////////// START GAME
+
+  useEffect(() => {
+    if (gameState === gState.ON) {
+      const pause = setTimeout(() => {
+        dispatch({ type: act.START });
+        beepSound.play();
+      }, 500);
+      timers.current.push(pause);
     }
   }, [gameState]);
 
-  ///////// INCREMENT SEQUENCE
+  /////////// INCREMENT SEQUENCE
 
   useEffect(() => {
     if (gameState === gState.STARTED) {
+      dispatch({ type: act.INCREMENT_SEQUENCE });
       const started = setTimeout(() => {
-        dispatch({ type: act.INCREMENT_SEQUENCE });
+        dispatch({ type: act.PLAY_SEQUENCE });
       }, 500);
       timers.current.push(started);
     }
   }, [gameState]);
 
-  ///////// PLAY SEQUENCE
+  /////////// PLAY SEQUENCE
 
   useEffect(() => {
     if (gameState === gState.PLAYING_SEQUENCE) {
       (() => {
         let i = 0;
         const padTrigger = setInterval(async () => {
-          timers.current.push(padTrigger);
-          // TODO: save padTrigger to ref
-
           activatePad(sequence[i]);
           const turnOffPad = setTimeout(() => {
-            timers.current.push(turnOffPad);
-
             dispatch({
               type: act.SET_ACTIVE_PAD,
               payload: { activePad: null },
@@ -100,40 +100,13 @@ function App() {
             }
             i++;
           }, seqInterval - 200);
+          timers.current.push(turnOffPad);
         }, seqInterval);
+
+        timers.current.push(padTrigger);
       })();
     }
   }, [gameState, sequence, seqInterval, count]);
-
-  // const resetSequence = () => {
-  //   timers.forEach(timer => {
-  //     clearTimeout(timer);
-  //     clearInterval(timer);
-  //   });
-
-  //   setSequence([]);
-  //   setCount(0);
-  //   setStarted(false);
-  //   setTimers([]);
-  //   setSequence([]);
-
-  //   setTimeout(() => {
-  //     setCountText("--");
-  //   }, 100);
-  // };
-
-  // const newSequence = () => {
-  //   const newCount = count + 1;
-  //   let randomNum = Math.floor(Math.random() * 4);
-  //   const newSequence = [...sequence, randomNum];
-
-  //   setCount(newCount);
-  //   setSeqInterval(seqInterval * 0.95);
-  //   setStarted(true);
-  //   setCountText(newCount.toString().padStart(2, "0"));
-  //   setPlayersTurn(false);
-  //   setSequence(newSequence);
-  // };
 
   const activatePad = (activePad, isMuted) => {
     dispatch({ type: act.SET_ACTIVE_PAD, payload: { activePad } });
@@ -145,21 +118,24 @@ function App() {
   const pieMouseUpHandler = async () => {
     if (gameState !== gState.PLAYERS_TURN) return;
 
-    if (count === winLength) {
+    if (playerSequence.length === winLength) {
+      dispatch({ type: act.SET_ACTIVE_PAD, payload: { activePad: null } });
       const pause = setTimeout(() => {
-        timers.current.push(pause);
-        console.log('forTheWin TODO');
-        // forTheWin()
+        forTheWin();
       }, 1000);
+
+      timers.current.push(pause);
       return;
     }
 
     dispatch({ type: act.SET_ACTIVE_PAD, payload: { activePad: null } });
+
     if (playerSequence.length === sequence.length) {
+      dispatch({ type: act.INCREMENT_SEQUENCE });
       const pause = setTimeout(() => {
-        timers.current.push(pause);
-        dispatch({ type: act.INCREMENT_SEQUENCE });
+        dispatch({ type: act.PLAY_SEQUENCE });
       }, 1200);
+      timers.current.push(pause);
     }
   };
 
@@ -182,8 +158,7 @@ function App() {
         payload: { playerSequence: tempSequence },
       });
     } else {
-      console.log('error! (TO DO)');
-      // error();
+      error();
     }
   };
 
@@ -198,94 +173,94 @@ function App() {
     return isCorrect;
   };
 
-  // const error = () => {
-  //   dispatch({type: act.SET_ERROR});
-  //   errorBeep.play();
+  const error = () => {
+    dispatch({ type: act.SET_ERROR });
+    errorBeep.play();
 
-  //   const repeats = 8;
-  //   let current = 0;
+    const REPEATS = 8;
+    let currentCount = 0;
 
-  //   let blink = setInterval(() => {
-  //     setCountText("XX");
-  //     setTimeout(() => {
-  //       setCountText("");
-  //     }, 100);
-  //     current++;
-  //     if (current === repeats) {
-  //       clearInterval(blink);
-  //       setTimeout(() => {
-  //         setCount(count.toString().padStart(2, "0"));
-  //         setPlayersTurn(true);
-  //       }, 600);
-  //     }
-  //   }, 200);
+    let blink = setInterval(() => {
+      dispatch({ type: act.UPDATE_DISPLAY, payload: { ledDisplay: 'XX' } });
+      const pause = setTimeout(() => {
+        dispatch({ type: act.UPDATE_DISPLAY, payload: { ledDisplay: '' } });
+      }, 100);
+      timers.current.push(pause);
+      currentCount++;
+      if (currentCount === REPEATS) {
+        clearInterval(blink);
+        const finish = setTimeout(() => {
+          dispatch({ type: act.PLAY_SEQUENCE });
+        }, 600);
+        timers.current.push(finish);
+      }
+    }, 200);
 
-  //   if (strictMode) {
-  //     setTimeout(() => {
-  //       resetSequence();
-  //       setTimeout(() => {
-  //         startHandler();
-  //       }, 1250);
-  //     }, 1250);
+    if (strictMode) {
+      const pause1 = setTimeout(() => {
+        dispatch({ type: act.RESET_SEQUENCE });
+        const pause2 = setTimeout(() => {
+          dispatch({ type: act.START });
+        }, 1250);
+        timers.current.push(pause2);
+      }, 1250);
+      timers.current.push(pause1);
+    }
+  };
 
-  //     setCount(0);
-  //     setSequence([]);
-  //   }
-  // };
+  const forTheWin = () => {
+    dispatch({ type: act.SET_WIN });
 
-  // const forTheWin = () => {
-  //   setPlayersTurn(false);
+    let i = 0;
+    const winMsgInterval = setInterval(() => {
+      if (i === message.length - 1) {
+        i = 0;
+      }
+      let current = [message[i], message[i + 1]];
+      current = current.join('');
 
-  //   let i = 0;
-  //   const winMsgInterval = setInterval(() => {
-  //     timers.push(winMsgInterval);
-  //     if (i === message.length - 1) {
-  //       i = 0;
-  //     }
-  //     let current = [message[i], message[i + 1]];
-  //     current = current.join("");
+      dispatch({ type: act.UPDATE_DISPLAY, payload: { ledDisplay: current } });
 
-  //     setCountText(current);
+      const ledDisplayTimeout = setTimeout(() => {
+        dispatch({ type: act.UPDATE_DISPLAY, payload: { ledDisplay: '' } });
+      }, 200);
+      timers.current.push(ledDisplayTimeout);
+      i++;
+    }, 220);
+    timers.current.push(winMsgInterval);
 
-  //     const countTextTimeout = setTimeout(() => {
-  //       timers.push(countTextTimeout);
-  //       setCountText("");
-  //     }, 200);
-  //     i++;
-  //   }, 220);
+    let j = 0;
+    let timer = 250;
+    let isMuted = false;
 
-  //   let j = 0;
-  //   let timer = 250;
-  //   let isMuted = false;
-  //   const lightShow = () => {
-  //     if (!gameOn) return;
-  //     activatePad(j % 4, isMuted);
-  //     setTimeout(() => {
-  //       if (timer > 40) {
-  //         timer *= (1 - 0.003) ** j;
-  //       }
-  //       j++;
-  //       if (j > 50) {
-  //         isMuted = true;
-  //       }
-  //       lightShow();
-  //     }, timer);
-  //   };
+    const lightShow = () => {
+      activatePad(j % 4, isMuted);
+      const pause = setTimeout(() => {
+        if (timer > 40) {
+          timer *= (1 - 0.003) ** j;
+        }
+        j++;
+        if (j > 32) {
+          isMuted = true;
+        }
+        lightShow();
+      }, timer);
+      timers.current.push(pause);
+    };
 
-  //   lightShow();
-  //   setTimers(timers);
-  //   setTimers(timers);
-  // };
+    lightShow();
+  };
 
-  // const strictHandler = () => {
-  //   if (gameOn) {
-  //     setStrictMode(!strictMode);
+  const strictHandler = () => {
+    if (gameOn) {
+      dispatch({ type: act.TOGGLE_STRICT });
 
-  //     if (!strictMode) {
-  //       beepSound.play();
-  //     }
-  //   }
-  // };
+      beepSound.load();
+      if (!strictMode) {
+        beepSound.play();
+      }
+    }
+  };
 
   const closeWelcome = () => {
     dispatch({ type: act.CLOSE_WELCOME });
@@ -297,32 +272,17 @@ function App() {
     <div className="App">
       <div className="circle-outer">
         <div className="row-wrap">
-          <div
-            id="3"
-            className={`pie upper-left ${activePad === 3 ? 'active' : ''}`}
-            onMouseDown={pieMouseDownHandler}
-            onMouseUp={pieMouseUpHandler}
-          />
-          <div
-            id="2"
-            className={`pie upper-right ${activePad === 2 ? 'active' : ''}`}
-            onMouseDown={pieMouseDownHandler}
-            onMouseUp={pieMouseUpHandler}
-          />
-        </div>
-        <div className="row-wrap">
-          <div
-            id="0"
-            className={`pie bottom-left ${activePad === 0 ? 'active' : ''}`}
-            onMouseDown={pieMouseDownHandler}
-            onMouseUp={pieMouseUpHandler}
-          />
-          <div
-            id="1"
-            className={`pie bottom-right ${activePad === 1 ? 'active' : ''}`}
-            onMouseDown={pieMouseDownHandler}
-            onMouseUp={pieMouseUpHandler}
-          />
+          {lightPads.map(pad => (
+            <div
+              key={pad.id}
+              id={pad.id}
+              className={`pie ${pad.class} ${
+                activePad === pad.id ? 'active' : ''
+              }`}
+              onMouseDown={pieMouseDownHandler}
+              onMouseUp={pieMouseUpHandler}
+            />
+          ))}
         </div>
         <div className="center-circle">
           <h1 className="header">samantha</h1>
@@ -333,7 +293,7 @@ function App() {
             </div>
             <div className="control-wrap">
               <div className="count-box" css={styles.countBox(gameOn)}>
-                <p>{countText}</p>
+                <p>{ledDisplay}</p>
               </div>
               <p>COUNT</p>
             </div>
@@ -341,7 +301,7 @@ function App() {
               <div
                 className="light strict"
                 css={styles.strictLight(strictMode)}
-                // onClick={strictHandler}
+                onClick={strictHandler}
               />
               <p>STRICT</p>
             </div>

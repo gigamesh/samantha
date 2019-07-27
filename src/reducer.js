@@ -1,13 +1,4 @@
-import {
-  actions as act,
-  gameState as gState,
-  message,
-  onSwitch,
-  beep,
-  errorBeep,
-  lightPads,
-  winLength,
-} from './constants';
+import { actions as act, gameState as gState } from './constants';
 
 export const initState = {
   gameState: null,
@@ -18,7 +9,7 @@ export const initState = {
   count: -1,
   sequence: [],
   playerSequence: [],
-  countText: '--',
+  ledDisplay: '--',
   seqInterval: 800,
   welcomeScreen: true,
   activePad: null,
@@ -30,11 +21,11 @@ function reducer(state, action) {
   }
 
   if (action.type === act.TURN_ON) {
-    if (state.gameOn) {
-      // RESET STATE EXCEPT WELCOME SCREEN (TURN OFF GAME):
-      return { ...initState, welcomeScreen: false };
-    }
-    return { ...state, gameState: gState.ON, gameOn: true, countText: '--' };
+    return { ...state, gameState: gState.ON, gameOn: true, ledDisplay: '--' };
+  }
+
+  if (action.type === act.TURN_OFF) {
+    return { ...initState, welcomeScreen: false };
   }
 
   if (action.type === act.START) {
@@ -44,7 +35,7 @@ function reducer(state, action) {
       started: true,
       sequence: [],
       count: 0,
-      countText: '00',
+      ledDisplay: '00',
     };
   }
 
@@ -53,9 +44,18 @@ function reducer(state, action) {
     const newSequence = [...state.sequence, randomNum];
     return {
       ...state,
-      gameState: gState.PLAYING_SEQUENCE,
+      gameState: gState.PAUSED,
       seqInterval: state.seqInterval * 0.95,
+      count: state.count + 1,
       sequence: newSequence,
+    };
+  }
+
+  if (action.type === act.PLAY_SEQUENCE) {
+    return {
+      ...state,
+      gameState: gState.PLAYING_SEQUENCE,
+      ledDisplay: state.count.toString().padStart(2, '0'),
     };
   }
 
@@ -70,6 +70,7 @@ function reducer(state, action) {
     return {
       ...state,
       gameState: gState.PLAYERS_TURN,
+      ledDisplay: state.count.toString().padStart(2, '0'),
       playerSequence: [],
     };
   }
@@ -78,6 +79,7 @@ function reducer(state, action) {
     return {
       ...state,
       gameState: gState.ERROR,
+      activePad: null,
     };
   }
 
@@ -85,6 +87,43 @@ function reducer(state, action) {
     return {
       ...state,
       ...action.payload,
+    };
+  }
+
+  if (action.type === act.UPDATE_DISPLAY) {
+    return {
+      ...state,
+      ...action.payload,
+    };
+  }
+
+  if (action.type === act.RESET_SEQUENCE) {
+    return {
+      ...state,
+      count: 0,
+      sequence: [],
+      playerSequence: [],
+    };
+  }
+
+  if (action.type === act.PAUSE) {
+    return {
+      ...state,
+      gameState: gState.PAUSED,
+    };
+  }
+
+  if (action.type === act.SET_WIN) {
+    return {
+      ...state,
+      gameState: gState.WIN_SEQUENCE,
+    };
+  }
+
+  if (action.type === act.TOGGLE_STRICT) {
+    return {
+      ...state,
+      strictMode: !state.strictMode,
     };
   }
 }
