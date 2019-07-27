@@ -181,31 +181,30 @@ function App() {
     let currentCount = 0;
 
     let blink = setInterval(() => {
-      dispatch({ type: act.UPDATE_DISPLAY, payload: { ledDisplay: 'XX' } });
+      dispatch({ type: act.UPDATE_DISPLAY, payload: { ledDisplay: '' } });
       const pause = setTimeout(() => {
-        dispatch({ type: act.UPDATE_DISPLAY, payload: { ledDisplay: '' } });
+        dispatch({ type: act.UPDATE_DISPLAY, payload: { ledDisplay: 'XX' } });
       }, 100);
       timers.current.push(pause);
       currentCount++;
       if (currentCount === REPEATS) {
         clearInterval(blink);
-        const finish = setTimeout(() => {
-          dispatch({ type: act.PLAY_SEQUENCE });
-        }, 600);
-        timers.current.push(finish);
+
+        if (strictMode) {
+          dispatch({ type: act.RESET_SEQUENCE });
+          dispatch({ type: act.INCREMENT_SEQUENCE });
+          const pause = setTimeout(() => {
+            dispatch({ type: act.PLAY_SEQUENCE });
+          }, 600);
+          timers.current.push(pause);
+        } else {
+          const finish = setTimeout(() => {
+            dispatch({ type: act.PLAY_SEQUENCE });
+          }, 600);
+          timers.current.push(finish);
+        }
       }
     }, 200);
-
-    if (strictMode) {
-      const pause1 = setTimeout(() => {
-        dispatch({ type: act.RESET_SEQUENCE });
-        const pause2 = setTimeout(() => {
-          dispatch({ type: act.START });
-        }, 1250);
-        timers.current.push(pause2);
-      }, 1250);
-      timers.current.push(pause1);
-    }
   };
 
   const forTheWin = () => {
@@ -253,12 +252,11 @@ function App() {
 
   const strictHandler = () => {
     if (gameOn) {
-      dispatch({ type: act.TOGGLE_STRICT });
-
       beepSound.load();
       if (!strictMode) {
         beepSound.play();
       }
+      dispatch({ type: act.TOGGLE_STRICT });
     }
   };
 
