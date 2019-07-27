@@ -1,3 +1,20 @@
+export const actions = {
+  CLOSE_WELCOME: "CLOSE_WELCOME",
+  ON_SWITCH: "ON_SWITCH",
+  START: "START",
+  INCREMENT_SEQUENCE: "INCREMENT_SEQUENCE",
+  SET_ACTIVE_PAD: "SET_ACTIVE_PAD",
+  SET_PLAYERS_TURN: "SET_PLAYERS_TURN"
+};
+
+export const gState = {
+  ON: "ON",
+  STARTED: "STARTED",
+  HOLD: "HOLD",
+  PLAYING_SEQUENCE: "PLAYING_SEQUENCE",
+  PLAYERS_TURN: "PLAYERS_TURN"
+};
+
 export const message = "YOU WIN!!   ".split("");
 export const winLength = 20;
 export const onSwitch =

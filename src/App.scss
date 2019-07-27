@@ -89,6 +89,10 @@ p {
   }
 }
 
+.start-text {
+  visibility: hidden;
+}
+
 @media (max-width: 599px) {
   .pie {
     width: 160px;
