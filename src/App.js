@@ -116,6 +116,7 @@ function App() {
   };
 
   const pieMouseUpHandler = async () => {
+    console.log('pieMouseUpHandler');
     if (gameState !== gState.PLAYERS_TURN) return;
 
     if (playerSequence.length === winLength) {
@@ -140,6 +141,7 @@ function App() {
   };
 
   const pieMouseDownHandler = e => {
+    console.log('pieMouseDownHandler');
     if (gameState !== gState.PLAYERS_TURN) return;
 
     const currentPad = Number(e.target.id);
@@ -278,7 +280,9 @@ function App() {
                 activePad === pad.id ? 'active' : ''
               }`}
               onMouseDown={pieMouseDownHandler}
+              onTouchStart={pieMouseDownHandler}
               onMouseUp={pieMouseUpHandler}
+              onTouchEnd={pieMouseUpHandler}
             />
           ))}
         </div>

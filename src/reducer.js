@@ -16,8 +16,6 @@ export const initState = {
 };
 
 function reducer(state, action) {
-  console.log(action.type);
-
   if (action.type === act.CLOSE_WELCOME) {
     return { ...state, welcomeScreen: false };
   }
