@@ -6,13 +6,14 @@ export const initState = {
   started: false,
   playersTurn: false,
   strictMode: false,
-  count: -1,
+  count: 0,
   sequence: [],
   playerSequence: [],
   ledDisplay: '--',
   seqInterval: 800,
   welcomeScreen: true,
   activePad: null,
+  isMobile: false,
 };
 
 function reducer(state, action) {

@@ -4,6 +4,7 @@ import reducer, { initState } from './reducer';
 // this comment tells babel to convert jsx to calls to a function called jsx instead of React.createElement
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
+import { isMobile } from 'react-device-detect';
 import WelcomeScreen from './WelcomeScreen';
 import {
   actions as act,
@@ -115,9 +116,13 @@ function App() {
     note.play();
   };
 
-  const pieMouseUpHandler = async () => {
-    console.log('pieMouseUpHandler');
-    if (gameState !== gState.PLAYERS_TURN) return;
+  const pieMouseUpHandler = async e => {
+    if (
+      gameState !== gState.PLAYERS_TURN ||
+      (isMobile && e.type === 'mouseup')
+    ) {
+      return;
+    }
 
     if (playerSequence.length === winLength) {
       dispatch({ type: act.SET_ACTIVE_PAD, payload: { activePad: null } });
@@ -141,8 +146,12 @@ function App() {
   };
 
   const pieMouseDownHandler = e => {
-    console.log('pieMouseDownHandler');
-    if (gameState !== gState.PLAYERS_TURN) return;
+    if (
+      gameState !== gState.PLAYERS_TURN ||
+      (isMobile && e.type === 'mousedown')
+    ) {
+      return;
+    }
 
     const currentPad = Number(e.target.id);
     dispatch({ type: act.SET_ACTIVE_PAD, payload: { activePad: currentPad } });
@@ -279,10 +288,10 @@ function App() {
               className={`pie ${pad.class} ${
                 activePad === pad.id ? 'active' : ''
               }`}
-              onMouseDown={pieMouseDownHandler}
               onTouchStart={pieMouseDownHandler}
-              onMouseUp={pieMouseUpHandler}
               onTouchEnd={pieMouseUpHandler}
+              onMouseDown={pieMouseDownHandler}
+              onMouseUp={pieMouseUpHandler}
             />
           ))}
         </div>
