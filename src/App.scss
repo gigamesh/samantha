@@ -1,4 +1,7 @@
 @import url('https://fonts.googleapis.com/css?family=Wire+One|Abel|VT323');
+
+$mobile: 599px;
+
 body {
   font-family: 'Abel', sans-serif;
   font-size: 18px;
@@ -6,10 +9,8 @@ body {
   height: 100vh;
   background: #151a26;
   display: flex;
-}
 
-@media (max-width: 599px) {
-  body {
+  @media (max-width: $mobile) {
     font-size: 14px;
   }
 }
@@ -55,12 +56,10 @@ p {
   flex-shrink: 0;
   width: 608px;
   height: 608px;
-}
 
-@media (max-width: 599px) {
-  .circle-outer {
-    width: 340px;
-    height: 340px;
+  @media (max-width: $mobile) {
+    width: 320px;
+    height: 320px;
   }
 }
 
@@ -68,16 +67,6 @@ p {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-}
-
-.pie {
-  width: 280px;
-  height: 280px;
-  transition: background 0.05s ease;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .strict,
@@ -92,80 +81,83 @@ p {
   visibility: hidden;
 }
 
-@media (max-width: 599px) {
-  .pie {
-    width: 160px;
-    height: 160px;
+.pie {
+  border: 5px solid #222;
+  width: 280px;
+  height: 280px;
+  transition: background 0.05s ease;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  @media (max-width: $mobile) {
+    width: 152px;
+    height: 152px;
   }
 }
 
-.pie.upper-left {
-  margin-right: 8px;
+.upper-left,
+.upper-right {
   margin-bottom: 16px;
-  border: 5px solid #222;
+}
+
+.bottom-right,
+.upper-right {
+  margin-left: 8px;
+}
+
+.upper-left,
+.bottom-left {
+  margin-right: 8px;
+}
+
+.upper-left {
   border-top-left-radius: 100%;
   background: #d0c435;
-}
 
-.pie.upper-left.active {
-  background: #f9e920;
-}
+  .active {
+    background: #f9e920;
+  }
 
-@media (max-width: 599px) {
-  .pie.upper-left {
+  .upper-left {
     margin-right: 3px;
   }
 }
 
-.pie.upper-right {
-  margin-bottom: 16px;
-  margin-left: 8px;
-  border: 5px solid #222;
+.upper-right {
   border-top-right-radius: 100%;
   background: #63b563;
-}
 
-.pie.upper-right.active {
-  background: #6bf26b;
-}
-
-@media (max-width: 599px) {
-  .pie.upper-right {
-    margin-left: 3px;
+  .active {
+    background: #6bf26b;
   }
 }
 
-.pie.bottom-left {
-  margin-right: 8px;
-  border: 5px solid #222;
+.bottom-left {
   border-bottom-left-radius: 100%;
   background: #3379a1;
-}
 
-.pie.bottom-left.active {
-  background: #4abeff;
-}
-
-@media (max-width: 599px) {
-  .pie.bottom-left {
-    margin-right: 3px;
+  .active {
+    background: #4abeff;
   }
 }
 
-.pie.bottom-right {
-  margin-left: 8px;
-  border: 5px solid #222;
+.bottom-right {
   border-bottom-right-radius: 100%;
   background: #b54444;
+
+  .active {
+    background: #f74343;
+  }
 }
 
-.pie.bottom-right.active {
-  background: #f74343;
-}
-
-@media (max-width: 599px) {
-  .pie.bottom-right {
-    margin-left: 3px;
+.upper-left,
+.upper-right,
+.bottom-left,
+.bottom-right {
+  @media (max-width: $mobile) {
+    margin: 1px;
   }
 }
 
@@ -184,10 +176,8 @@ p {
   width: 270px;
   height: 270px;
   z-index: 10;
-}
 
-@media (max-width: 599px) {
-  .center-circle {
+  @media (max-width: $mobile) {
     width: 170px;
     height: 170px;
   }
@@ -198,10 +188,8 @@ p {
   font-size: 3em;
   margin: 20px 0 5px 0;
   letter-spacing: 3px;
-}
 
-@media (max-width: 599px) {
-  .header {
+  @media (max-width: $mobile) {
     font-size: 2.2em;
     margin: 15px 0 3px 0;
   }
@@ -230,10 +218,8 @@ p {
   height: 80px;
   width: 60px;
   margin: 0 10px;
-}
 
-@media (max-width: 599px) {
-  .control-wrap {
+  @media (max-width: $mobile) {
     height: 70px;
     width: 50px;
     margin: 0;
@@ -248,10 +234,8 @@ p {
   border-radius: 20%;
   background: #290404;
   font-size: 2.4em;
-}
 
-@media (max-width: 599px) {
-  .count-box {
+  @media (max-width: $mobile) {
     font-size: 2em;
     width: 80%;
     height: 40px;
@@ -260,10 +244,8 @@ p {
 
 .count-box p {
   margin: 0;
-}
 
-@media (max-width: 599px) {
-  .count-box p {
+  @media (max-width: $mobile) {
     line-height: 130%;
   }
 }
@@ -273,10 +255,8 @@ p {
   width: 36px;
   background: #222;
   border: 2px solid #222;
-}
 
-@media (max-width: 599px) {
-  .on-toggle-outer {
+  @media (max-width: $mobile) {
     height: 16px;
     width: 30px;
   }
@@ -287,12 +267,11 @@ p {
   background: #33b9fb;
   height: 16px;
   width: 16px;
-}
 
-@media (max-width: 599px) {
-  .on-toggle-inner {
-    height: 12px;
-    width: 12px;
+  @media (max-width: $mobile) {
+    height: 13px;
+    width: 13px;
+    border-width: 1px;
   }
 }
 
@@ -303,12 +282,18 @@ p {
   width: 26px;
   border-radius: 50%;
   border: 4px solid #222;
-}
 
-@media (max-width: 599px) {
-  .light {
+  @media (max-width: $mobile) {
     height: 18px;
     width: 18px;
+  }
+}
+
+.pie,
+.light,
+.center-circle {
+  @media (max-width: $mobile) {
+    border-width: 2px;
   }
 }
 
@@ -342,7 +327,7 @@ p {
   justify-content: center;
   height: 100vh;
   width: 100vw;
-  padding-top: 60px;
+  padding: 60px 3% 0;
 
   .content {
     width: 95%;
