@@ -116,40 +116,40 @@ p {
   border-top-left-radius: 100%;
   background: #d0c435;
 
-  .active {
-    background: #f9e920;
-  }
-
   .upper-left {
     margin-right: 3px;
   }
 }
 
+.pie.upper-left.active {
+  background: #f9e920;
+}
+
 .upper-right {
   border-top-right-radius: 100%;
   background: #63b563;
+}
 
-  .active {
-    background: #6bf26b;
-  }
+.pie.upper-right.active {
+  background: #6bf26b;
 }
 
 .bottom-left {
   border-bottom-left-radius: 100%;
   background: #3379a1;
+}
 
-  .active {
-    background: #4abeff;
-  }
+.pie.bottom-left.active {
+  background: #4abeff;
 }
 
 .bottom-right {
   border-bottom-right-radius: 100%;
   background: #b54444;
+}
 
-  .active {
-    background: #f74343;
-  }
+.pie.bottom-right.active {
+  background: #f74343;
 }
 
 .upper-left,
